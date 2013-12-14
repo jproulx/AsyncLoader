@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <body>
+    <div id="CONSOLE"></div>
+        <script>
+            console_log = function (log) {
+                document.getElementById('CONSOLE').innerHTML = document.getElementById('CONSOLE').innerHTML + ' ' + log + '<br />';
+            }
+            window.include = (function () {
+                var first   = document.getElementsByTagName('script')[0];
+                var scripts = [];
+                var readyStateCheck = function () {
+                    var pending;
+                    while (scripts[0] && scripts[0].script && scripts[0].script.readyState == 'loaded') {
+                        pending = scripts.shift();
+                        first.parentNode.insertBefore(pending.script, first);
+                        console_log(pending.scriptID + ': Found and inserted');
+                        pending.script.children;
+                        if (pending.script.readyState == 'loading') {
+                            console_log(pending.scriptID + ': Error');
+                            pending.callback.call(null, '404');
+                            pending.onreadystatechange = null;
+                        } else {
+                            scripts.push(pending);
+                        }
+                    }
+                    while (scripts[0] && scripts[0].script && scripts[0].script.readyState == 'complete') {
+                        pending = scripts.shift();
+                        console_log(pending.scriptID + ': Done');
+                        pending.callback.call(null, null);
+                        pending.onreadystatechange = null;
+                    }
+                };
+                return function (scriptID, scriptURL, callback) {
+                    console_log(scriptID + ': Init ' + scriptURL);
+                    function finish (error) {
+                        console_log(scriptID + ' Callback ' + ' Error: ' + !!error);
+                        if (callback && typeof callback == 'function') {
+                            try {
+                                callback.call(null, !!error);
+                            } catch (e) { }
+                        }
+                    }
+                    var script = document.createElement('script');
+                    script.id = 'js-' + scriptID;
+                    script.async = 1;
+                    if (first.readyState) {
+                        scripts.push({
+                            'script' : script,
+                            'scriptID' : scriptID,
+                            'callback' : finish
+                        });
+                        script.onreadystatechange = readyStateCheck;
+                        script.src = scriptURL;
+                    } else {
+                        script.onload  = function () { finish(null); };
+                        script.onerror = function (error) { finish(error); };
+                        script.src = scriptURL;
+                        first.parentNode.insertBefore(script, first);
+                    }
+                };
+            }());
+            include('jQuery', '//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js');
+            include('FB',     '//connect.facebook.net/en_US/all.js');
+            include('history', '//cdnjs.cloudflare.com/ajax/libs/history.js/1.8/native.history.min.js');
+            include('failure', '//jproulx.net/404.js');
+        </script>
+    </body>
+</html>
